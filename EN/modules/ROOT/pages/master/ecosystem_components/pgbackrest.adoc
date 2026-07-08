@@ -1,0 +1,499 @@
+:sectnums:
+:sectnumlevels: 5
+
+= pgBackRest
+
+== Overview
+
+pgBackRest is a reliable backup and restore solution for PostgreSQL. At its core, it is built on PostgreSQL physical-level backups (files in the data directory) and the WAL archive management mechanism. The project is notable for its high quality: 100% test coverage, high-quality code, and minimal dependencies.
+
+NOTE: pgBackRest introduced a CRC check of the pg_control file in v2.48.0. Since IvorySQL modifies the pg_control file layout, the pg-version-force option must be used in the stanza configuration to specify the PostgreSQL version corresponding to IvorySQL.
+
+NOTE: pgBackRest works with IvorySQL 5.x without modification, but this is merely a coincidence. In practice, it is still recommended to add the pg-version-force option.
+
+Project URL: <https://github.com/pgbackrest/pgbackrest>
+
+Version: v2.58.0
+
+License: MIT License
+
+== Installation
+
+[TIP]
+The official website recommends installing from a package manager.
+
+[TIP]
+The source build was tested on Ubuntu 26.04.
+
+=== Dependencies
+
+[source,bash]
+----
+sudo apt update && \
+sudo apt-get install python3-setuptools meson gcc \
+      libpq-dev libssl-dev libxml2-dev \
+      pkg-config liblz4-dev libzstd-dev \
+      libbz2-dev libz-dev libyaml-dev \
+      libssh2-1-dev
+----
+
+=== Building from Source
+
+[source,bash]
+----
+cd ~
+mkdir -p build
+wget -q -O - \
+       https://github.com/pgbackrest/pgbackrest/archive/release/2.58.0.tar.gz | \
+       tar zx -C build
+meson setup build/pgbackrest build/pgbackrest-release-2.58.0
+ninja -C build/pgbackrest
+
+# After compilation, the pgbackrest executable will be generated under build/src
+./build/src/pgbackrest --version
+----
+
+=== Verifying the Installation
+
+NOTE: pgBackRest itself is a single executable; simply pass in a configuration file when using it. This document is for usage instructions only — no additional installation steps are required.
+
+== Configuration
+
+NOTE: pgBackRest supports multiple backup repositories. For details, see: <https://pgbackrest.org/user-guide.html#multi-repo>
+
+NOTE: In the demonstration in this document, the PG database and the backup repository are on the same host, and the backup repository is a local file system.
+
+Configuration is required in two places:
+
+[cols="1,2"]
+|===
+| File name | Description
+
+| postgresql.conf
+| Configures `PostgreSQL`: add `archive_command` to enable `WAL` backup
+
+| pgbackrest.conf
+| Configuration for `pgBackRest` itself, including the source database, backup repository, etc.
+|===
+
+Append to the end of `postgresql.conf`:
+
+NOTE: This is an example only; for actual steps, refer to the later sections of this document.
+
+[source,conf]
+----
+port = 6551
+ivorysql.port = 6553
+listen_addresses = '127.0.0.1'
+unix_socket_directories = '/tmp/.pgbr_sock_1000_6551'
+archive_mode = on
+archive_command = '/path/to/pgbackrest --config=/path/to/pgbackrest.conf --stanza=ivory archive-push %p'
+log_min_messages = info
+----
+
+Create `pgbackrest.conf`:
+
+NOTE: This is an example only; for actual steps, refer to the later sections of this document.
+
+[source,conf]
+----
+[global]
+# With multiple repos configured, WAL is fully redundant and backups must be run manually
+repo1-path=/tmp/pgbackrest_ivorysql/repo
+# Retention period for full backups
+repo1-retention-full=9999
+# Log files
+log-path=/tmp/pgbackrest_ivorysql/log
+# Console log level
+log-level-console=info
+# Log level for the log file
+log-level-file=detail
+# Do not wait for the next checkpoint
+start-fast=y
+
+[$STANZA]
+# Configuring multiple pg entries is for primary+replica setups; the numbering does not indicate primary/standby roles, which are detected automatically
+pg1-path=/tmp/pgbackrest_ivorysql/pg1/data
+pg1-port=6551
+pg1-socket-path='/tmp/.pgbr_sock_1000_6551'
+pg-version-force=18
+----
+
+== Usage
+
+=== pgBackRest Commands
+
+[source,bash]
+----
+# Usage
+pgbackrest [options] [command]
+----
+
+List of `pgBackRest` commands:
+
+[source,bash]
+----
+# Add or modify a backup annotation; annotations are recorded in JSON form in the backup.info file
+annotate
+
+# Fetch a WAL segment from the backup repository; invoked by PostgreSQL via restore_command.
+# When running pgbackrest restore, it is automatically written into postgresql.auto.conf:
+# "restore_command = 'pgbackrest --stanza=ivory archive-get %f "%p"'"
+archive-get
+
+# Push a WAL segment into the backup repository — pushes the WAL segment PostgreSQL has just finished writing to the pgbackrest repository.
+# Together with archive-get (one in, one out), it forms the foundation of PITR.
+# Must be manually written into postgresql.conf: "archive_command = 'pgbackrest --stanza=ivory archive-push %p'"
+archive-push
+
+# Back up the PG database: take a consistent backup of the entire data directory and write it to the repository.
+backup
+
+# Check the configuration, verify repository information, and test the archiving pipeline (executes pg_switch_wal)
+check
+
+# Delete expired backups and WAL archives that are no longer needed
+expire
+
+# Display help information
+help
+
+# Get information about backups
+info
+
+# For debugging: fetch any file from the repository and write it to stdout or a local file.
+repo-get
+
+# List files and directories in the repository via the storage driver
+repo-ls
+
+# Restore a backup from the repository into a startable data directory, and automatically configure subsequent WAL replay.
+restore
+
+# Run the transport service for multi-host deployments (TLS mode): moves backup data between hosts. Must run on both the PG and Repo hosts.
+server
+
+# pgBackRest server liveness-check command
+server-ping
+
+# Initialization command: create the stanza metadata skeleton for a cluster in the repository
+stanza-create
+
+# Delete a stanza
+stanza-delete
+
+# After a major database version upgrade, the stanza must be upgraded accordingly
+stanza-upgrade
+
+# Does not start any process/service; its only job is to delete the stop file left by the stop command, allowing pgbackrest operations to resume.
+start
+
+# Create a stop file; backup, archive-push, expire, stanza-create/upgrade, and remote requests will refuse to run when they detect this file at startup.
+stop
+
+# Check whether existing backups and WAL are intact
+verify
+
+# Get the current version
+version
+----
+
+List of `pgBackRest` internal commands. These commands should not be used in production scenarios, as they may cause data corruption:
+
+[source,bash]
+----
+# Dump the manifest of a backup in readable format
+manifest
+
+# Write a file into the repository (encrypted automatically); the reverse of repo-get
+repo-put
+
+# Delete repository files/directories (--recurse)
+repo-rm
+----
+
+=== Performing Operations
+
+TIP: Since the process is fairly complex, the commands have been parameterized and helper functions have been created to make testing easier. Please run the commands below within the same terminal session.
+
+Variable preparation:
+
+[source,bash]
+----
+# Adjust as appropriate for your environment: IVORY_PG_VERSION_MAJOR, IVORY_BIN, PGBACKREST_BIN; the rest can be left at defaults
+IVORY_PG_VERSION_MAJOR=18
+IVORY_BIN="/usr/local/ivorysql/bin"
+PGBACKREST_BIN="/home/lct/repos/pgbackrest/build/src/pgbackrest"
+TEST_BASE="/tmp/pgbackrest_ivorysql_regress"
+PG_PORT="6551"
+STANDBY_PORT="6552"
+ORA_PORT="6553"
+STANDBY_ORA_PORT="6554"
+DB_MODE="oracle"
+STANZA="ivory"
+
+PG1_DATA="$TEST_BASE/pg1/data"
+PG2_DATA="$TEST_BASE/pg2/data"
+REPO_PATH="$TEST_BASE/repo"
+# Unix socket paths have a 107-byte limit, so use a fixed short directory under /tmp
+SOCK_PATH="${SOCK_PATH:-/tmp/.pgbr_sock_$(id -u)_$PG_PORT}"
+LOG_PATH="$TEST_BASE/log"
+CONF="$TEST_BASE/pgbackrest.conf"
+RUN_LOG="$TEST_BASE/regression.log"
+TEST_DB="regress"
+RESTORE_POINT="pgb_regress_rp"
+
+sql()
+{
+    local port="$1" db="$2" query="$3"
+    "$IVORY_BIN/psql" -h "$SOCK_PATH" -p "$port" -d "$db" -U "$(id -un)" \
+        -v ON_ERROR_STOP=1 -Atc "$query" 2>>"$RUN_LOG"
+}
+switch_wal_and_wait()
+{
+    local wal i
+    # First generate a WAL record, to avoid pg_switch_wal() being a no-op (which would not trigger archiving) when the current segment is empty
+    sql "$ORA_PORT" postgres "SELECT pg_create_restore_point('pgb_wal_sync')" >/dev/null || return 1
+    wal=$(sql "$ORA_PORT" postgres "SELECT pg_walfile_name(pg_switch_wal())") || return 1
+    for i in $(seq 1 60); do
+        local archived
+        archived=$(sql "$ORA_PORT" postgres "SELECT last_archived_wal FROM pg_stat_archiver")
+        [[ -n "$archived" && ! "$archived" < "$wal" ]] && return 0
+        sleep 1
+    done
+    return 1
+}
+----
+
+Preparation before execution:
+
+[source,bash]
+----
+rm -rf "$SOCK_PATH"
+mkdir -p "$PG1_DATA" "$REPO_PATH" "$SOCK_PATH" "$LOG_PATH"
+chmod 700 "$PG1_DATA" "$SOCK_PATH"
+: >"$RUN_LOG"
+export LD_LIBRARY_PATH="$(dirname "$IVORY_BIN")/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
+
+# Confirm the versions
+${IVORY_BIN}/pg_ctl --version
+${PGBACKREST_BIN} --version
+----
+
+Initialize the primary database and configuration:
+
+[source,bash]
+----
+# Initialize, using oracle mode
+"$IVORY_BIN/initdb" -D "$PG1_DATA" -m "$DB_MODE" -E UTF8 --no-locale -A trust -U "$(id -un)"
+
+# Configure IvorySQL
+cat >>"$PG1_DATA/postgresql.conf" <<EOF
+
+# ---- pgbackrest additional configuration ----
+port = $PG_PORT
+ivorysql.port = $ORA_PORT
+listen_addresses = '127.0.0.1'
+unix_socket_directories = '$SOCK_PATH'
+archive_mode = on
+archive_command = '$PGBACKREST_BIN --config=$CONF --stanza=$STANZA archive-push %p'
+log_min_messages = info
+EOF
+
+# Configure pgBackRest
+cat >"$CONF" <<EOF
+[global]
+# With multiple repos configured, WAL is fully redundant and backups must be run manually
+# Path where backups and archive are stored.
+repo1-path=$REPO_PATH
+# Retention period for full backups
+repo1-retention-full=9999
+# Log files
+log-path=$LOG_PATH
+# Console log level
+log-level-console=info
+# Log level for the log file
+log-level-file=detail
+# Do not wait for the next checkpoint
+start-fast=y
+
+[$STANZA]
+# Configuring multiple pg entries is for primary+replica setups; the numbering does not indicate primary/standby roles, which are detected automatically
+pg1-path=$PG1_DATA
+pg1-port=$PG_PORT
+pg1-socket-path=$SOCK_PATH
+pg-version-force=$IVORY_PG_VERSION_MAJOR
+EOF
+----
+
+TIP: `pg-version-force=$IVORY_PG_VERSION_MAJOR` — under IvorySQL 5.x things work even without setting this, but that is the result of a series of coincidences, so it is still recommended to make sure this option is set.
+
+Initialize the data:
+
+[source,bash]
+----
+# Start PG
+"$IVORY_BIN/pg_ctl" -D "$PG1_DATA" -l "$LOG_PATH/pg1.log" -w start
+
+# Initialize the stanza
+"$PGBACKREST_BIN" --config="$CONF" --stanza="$STANZA" "stanza-create";
+
+# Check the configuration
+"$PGBACKREST_BIN" --config="$CONF" --stanza="$STANZA" "check";
+
+# Create data
+sql "$ORA_PORT" "$TEST_DB" \
+  "CREATE TABLE t_ora(id number PRIMARY KEY, name varchar2(100));
+  INSERT INTO t_ora SELECT g, 'ora-' || g FROM generate_series(1, 1000) g;";
+----
+
+Full backup:
+
+[source,bash]
+----
+"$PGBACKREST_BIN" --config="$CONF" --stanza="$STANZA" --type=full backup;
+----
+
+Differential backup:
+
+[source,bash]
+----
+# Insert one thousand more rows
+
+sql "$ORA_PORT" "$TEST_DB" \
+  "INSERT INTO t_ora SELECT g, 'ora-' || g FROM generate_series(1001, 2000) g;";
+
+# Differential backup
+"$PGBACKREST_BIN" --config="$CONF" --stanza="$STANZA" --type=diff backup;
+----
+
+Incremental backup:
+
+[source,bash]
+----
+# Insert one thousand more rows
+sql "$ORA_PORT" "$TEST_DB" \
+  "INSERT INTO t_ora SELECT g, 'ora-' || g FROM generate_series(2001, 3000) g;";
+
+# Incremental backup
+"$PGBACKREST_BIN" --config="$CONF" --stanza="$STANZA" --type=incr backup;
+----
+
+View the backup list:
+
+[source,bash]
+----
+"$PGBACKREST_BIN" --config="$CONF" --stanza="$STANZA" info;
+----
+
+Expected output:
+
+[source,bash]
+----
+stanza: ivory
+    status: ok
+    cipher: none
+
+    db (current)
+        wal archive min/max (18): 000000010000000000000001/000000010000000000000007
+
+        full backup: 20260707-164512F
+            timestamp start/stop: 2026-07-07 16:45:12+08 / 2026-07-07 16:45:13+08
+            wal start/stop: 000000010000000000000003 / 000000010000000000000003
+            database size: 36.2MB, database backup size: 36.2MB
+            repo1: backup set size: 4.8MB, backup size: 4.8MB
+
+        diff backup: 20260707-164512F_20260707-164826D
+            timestamp start/stop: 2026-07-07 16:48:26+08 / 2026-07-07 16:48:27+08
+            wal start/stop: 000000010000000000000005 / 000000010000000000000005
+            database size: 36.3MB, database backup size: 496.3KB
+            repo1: backup set size: 4.8MB, backup size: 89.7KB
+            backup reference total: 1 full
+
+        incr backup: 20260707-164512F_20260707-165028I
+            timestamp start/stop: 2026-07-07 16:50:28+08 / 2026-07-07 16:50:29+08
+            wal start/stop: 000000010000000000000007 / 000000010000000000000007
+            database size: 36.3MB, database backup size: 272.3KB
+            repo1: backup set size: 4.8MB, backup size: 33.9KB
+            backup reference total: 1 full, 1 diff
+----
+
+Backup repository integrity verification:
+
+[source,bash]
+----
+"$PGBACKREST_BIN" --config="$CONF" --stanza="$STANZA" verify;
+----
+
+You should see output similar to the following:
+
+[source,bash]
+----
+2026-07-07 16:54:01.819 P00   INFO: verify command begin 2.58.0: --config=/tmp/pgbackrest_ivorysql_regress/pgbackrest.conf --exec-id=3116367-e3fb70bf --log-level-console=info --log-level-file=detail --log-path=/tmp/pgbackrest_ivorysql_regress/log --repo1-path=/tmp/pgbackrest_ivorysql_regress/repo --stanza=ivory
+2026-07-07 16:54:02.100 P00   INFO: verify command end: completed successfully (283ms)
+----
+
+Full restore:
+
+[source,bash]
+----
+# Save the current md5; the command outputs the current value, e.g.: ae3361d0b4e8dadae6f7f7fffbfa54da
+sql "$ORA_PORT" "$TEST_DB" \
+  "SELECT md5(string_agg(id::text || ':' || name, ',' ORDER BY id)) FROM t_ora;";
+
+# Call the function defined earlier to make sure the WAL is archived; this is the proper procedure when taking a backup
+switch_wal_and_wait
+
+# Stop PG and wipe the data
+"$IVORY_BIN/pg_ctl" -D "$PG1_DATA" -w -t 60 -m fast stop
+find "$PG1_DATA" -mindepth 1 -delete
+
+# Perform a full restore
+"$PGBACKREST_BIN" --config="$CONF" --stanza="$STANZA" restore;
+
+# Verify after the restore; this md5 output should match the one above
+"$IVORY_BIN/pg_ctl" -D "$PG1_DATA" -l "$LOG_PATH/pg1.log" -w start
+sql "$ORA_PORT" "$TEST_DB" \
+  "SELECT md5(string_agg(id::text || ':' || name, ',' ORDER BY id)) FROM t_ora;";
+----
+
+Delta restore — since this continues from the operations above, the md5 remains the same:
+
+[source,bash]
+----
+# Stop PG, then simulate a corruption scenario
+"$IVORY_BIN/pg_ctl" -D "$PG1_DATA" -w -t 60 -m fast stop
+rm -f "$PG1_DATA/global/pg_control"
+
+# Perform a delta restore
+"$PGBACKREST_BIN" --config="$CONF" --stanza="$STANZA" --delta restore;
+
+# Verify; this md5 output should match the one above
+"$IVORY_BIN/pg_ctl" -D "$PG1_DATA" -l "$LOG_PATH/pg1.log" -w start
+sql "$ORA_PORT" "$TEST_DB" \
+  "SELECT md5(string_agg(id::text || ':' || name, ',' ORDER BY id)) FROM t_ora;";
+----
+
+Rollback to a restore point — since this continues from the operations above, the md5 remains the same:
+
+[source,bash]
+----
+# Create a restore point; the output looks like: 0/B00EAB8
+sql "$ORA_PORT" "$TEST_DB" \
+  "SELECT pg_create_restore_point('$RESTORE_POINT');";
+
+# Perform a simulated accidental operation
+sql "$ORA_PORT" "$TEST_DB" \
+  "DELETE FROM t_ora WHERE id > 100;";
+
+# Perform the restore
+"$IVORY_BIN/pg_ctl" -D "$PG1_DATA" -w -t 60 -m fast stop
+"$PGBACKREST_BIN" --config="$CONF" --stanza="$STANZA" \
+  --delta --type=name --target="$RESTORE_POINT" \
+  --target-action=promote restore;
+
+# Verify; this md5 output should match the one above
+"$IVORY_BIN/pg_ctl" -D "$PG1_DATA" -l "$LOG_PATH/pg1.log" -w start
+sql "$ORA_PORT" "$TEST_DB" \
+  "SELECT md5(string_agg(id::text || ':' || name, ',' ORDER BY id)) FROM t_ora;";
+----
