@@ -1,0 +1,313 @@
+:sectnums:
+:sectnumlevels: 5
+
+= Ecosystem Component Adaptation Contribution Guide
+
+== Overview
+
+As an Oracle-compatible database built on PostgreSQL, IvorySQL naturally inherits PostgreSQL's rich extension ecosystem. To enable more PostgreSQL ecosystem components to run stably on IvorySQL, the IvorySQL community welcomes external contributors to participate in ecosystem component adaptation work.
+
+This document provides complete guidance for contributors who want to participate in ecosystem component adaptation, covering the entire process from topic selection, environment preparation, adaptation testing, documentation writing, to contribution submission.
+
+== Adaptation Scope
+
+=== Suitable Component Types
+
+The following types of components are welcome for adaptation contributions:
+
+* Official PostgreSQL community extensions (contrib modules or well-known third-party extensions)
+* Utility plugins developed based on PostgreSQL's extension mechanism
+* Tools related to database operations, monitoring, and performance analysis
+* Tools related to data migration, synchronization, and backup
+* Enhanced extensions such as full-text search, vector search, and graph databases
+* Peripheral ecosystem tools such as connection pools, proxies, and middleware
+
+=== Unsuitable Components
+
+* Components that depend on specific operating systems or hardware architectures and cannot run on mainstream platforms
+* Components that have fundamental conflicts with IvorySQL's Oracle compatibility mode and cannot be resolved
+* Components that are no longer maintained or have serious security issues
+* Commercial closed-source components that cannot provide community test versions
+
+== Contribution Process
+
+=== Step 1: Topic Selection and Communication
+
+==== Check Existing Adaptations
+
+Before starting adaptation work, please check the xref:master/ecosystem_components/ecosystem_overview.adoc[Ecosystem Plugin Compatibility List] to confirm whether the target component has already been adapted.
+
+==== Submit an Issue
+
+If you want to adapt a component not yet included, please first submit an Issue on the https://github.com/IvorySQL/ivorysql_docs[ivorysql_docs repository], including the following information:
+
+* Component name and project URL
+* Component description and use cases
+* Component's open-source license
+* Recent maintenance status (whether actively maintained)
+* The component version you plan to adapt
+
+Maintainers will evaluate whether the component is suitable for inclusion in the IvorySQL ecosystem and communicate with you through the Issue.
+
+[TIP]
+It is recommended to start adaptation work only after receiving confirmation from maintainers to avoid unnecessary effort.
+
+==== Sign the CLA
+
+Before submitting documentation contributions, please ensure you have signed the Contributor License Agreement (CLA). For details, please refer to the CLA signing instructions in the xref:master/contribution/community_contribution_guide.adoc[Community Contribution Guide].
+
+=== Step 2: Environment Preparation
+
+==== IvorySQL Environment
+
+Please prepare an IvorySQL environment for testing, preferably meeting the following requirements:
+
+* IvorySQL version: 5.0 or above
+* Operating system: Ubuntu 24.04 (x86_64) or other mainstream Linux distributions recommended
+* Installation path: Note the IvorySQL installation path, as the `pg_config` path will be needed when compiling extensions later
+
+[TIP]
+You can quickly set up a test environment using IvorySQL's official Docker images. Refer to xref:master/containerization/docker_podman_deployment.adoc[Docker & Podman Deployment].
+
+==== Build Toolchain
+
+Prepare the appropriate toolchain based on the target component's build method:
+
+* C/C++ extensions: gcc, make, and other basic build tools
+* Rust extensions: cargo, rustc, and other Rust toolchain components
+* Extensions in other languages: corresponding language runtime environments
+
+=== Step 3: Adaptation Testing
+
+==== Source Compilation
+
+Obtain the source code from the component's official repository and compile it following these steps:
+
+. Set the `PG_CONFIG` environment variable to point to IvorySQL's `pg_config`
++
+[literal]
+----
+export PG_CONFIG=/usr/local/ivorysql/ivorysql-5/bin/pg_config
+----
+
+. Compile and install according to the component's official documentation
++
+[literal]
+----
+# Taking an extension as an example
+git clone <component source repository URL>
+cd <component directory>
+make
+sudo make install
+----
+
+==== Functionality Verification
+
+After successful compilation and installation, perform the following verifications:
+
+. *Extension creation verification*: Execute `CREATE EXTENSION` in IvorySQL to create the extension and confirm it loads correctly
++
+[literal]
+----
+ivorysql=# CREATE EXTENSION <extension_name>;
+CREATE EXTENSION
+----
+
+. *Version confirmation*: Confirm the installed extension version matches expectations
++
+[literal]
+----
+ivorysql=# SELECT * FROM pg_available_extensions WHERE name = '<extension_name>';
+----
+
+. *Functionality testing*: Verify core functionality works correctly by following the test cases provided in the component documentation
+. *Boundary testing*: Test boundary conditions and exception scenarios to confirm the extension's robustness
+
+==== Oracle Compatibility Testing
+
+If the target component needs to be used in IvorySQL's Oracle compatibility mode, additional compatibility testing is required:
+
+. Connect to the database using port 1521 (the default port for Oracle compatibility mode)
++
+[literal]
+----
+psql -p 1521
+----
+
+. Test data type compatibility in Oracle compatibility mode
+. Test whether component functionality supports Oracle-style anonymous blocks, stored procedures, functions, etc.
+. Document all compatibility issues and solutions
+
+[NOTE]
+Not all components support Oracle compatibility mode. If a component relies on PostgreSQL-specific internal mechanisms (such as using the `pg_query` module for statement parsing), it may not work in Oracle compatibility mode. This must be clearly stated in the documentation.
+
+=== Step 4: Documentation Writing
+
+==== Document Structure
+
+Each ecosystem component adaptation document should include the following sections (adjust as appropriate based on component characteristics):
+
+[cols="1,3"]
+|===
+|Section |Description
+
+|Overview
+|Introduce the component's functionality, use cases, and relationship with IvorySQL
+
+|Principle Introduction
+|(Optional) Explain the component's core working principles to help readers understand how it works
+
+|Installation
+|Detailed installation steps, including dependency installation, source acquisition, compilation, extension creation, etc.
+
+|Configuration
+|(Optional) If the component requires additional configuration steps (such as modifying `ivorysql.conf`, restarting services, etc.), explain them here
+
+|Usage
+|Usage examples for core functionality, including object creation, operation execution, query results, etc.
+
+|Oracle Compatibility
+|(Optional) Component behavior in Oracle compatibility mode, including supported features and known limitations
+|===
+
+==== Document Template
+
+Below is a basic template for ecosystem component adaptation documentation. Contributors can fill in content based on this template:
+
+[source,asciidoc]
+------
+:sectnums:
+:sectnumlevels: 5
+
+= <Component Name>
+
+== Overview
+<Component functionality introduction, use cases, and relationship with IvorySQL>
+
+Project URL: <https://github.com/xxx/xxx>
+
+Version: <adapted component version number>
+
+License: <component's open-source license>
+
+== Installation
+
+[TIP]
+Source test installation environment is <OS version>, with IvorySQL 5+ already installed at /usr/local/ivorysql/ivorysql-5
+
+=== Dependencies
+<List and explain required dependencies>
+
+=== Source Installation
+[literal]
+----
+# Get source code
+git clone <repository URL>
+cd <directory>
+
+# Set pg_config path
+export PG_CONFIG=/usr/local/ivorysql/ivorysql-5/bin/pg_config
+
+# Compile and install
+make
+sudo make install
+----
+
+=== Create Extension
+[literal]
+----
+ivorysql=# CREATE EXTENSION <extension_name>;
+CREATE EXTENSION
+
+ivorysql=# SELECT * FROM pg_available_extensions WHERE name = '<extension_name>';
+----
+
+== Usage
+
+=== <Feature One>
+<Usage example and output>
+
+=== <Feature Two>
+<Usage example and output>
+
+== Oracle Compatibility
+<Optional: Test results in Oracle compatibility mode>
+------
+
+==== Update the Overview Page
+
+After completing the component documentation, please make sure to update the plugin list table in xref:master/ecosystem_components/ecosystem_overview.adoc[ecosystem_overview.adoc] by appending a new row at the end of the table with the following information:
+
+* Index: Current maximum index + 1
+* Plugin name: Plugin name with xref link
+* Version: The component version you adapted
+* Function description: One-sentence summary of component functionality
+* Use cases: List main use cases
+
+[NOTE]
+Both the Chinese and English versions of the overview page need to be updated.
+
+=== Step 5: Submit PR
+
+==== Create Branch
+
+Create a feature branch in your forked repository:
+
+[literal]
+----
+git checkout -b feature/adapt-<component_name>
+----
+
+==== Add Files
+
+. Place the documentation file in the `CN/modules/ROOT/pages/master/ecosystem_components/` directory
+. If there are image resources, place them in the `CN/modules/ROOT/images/` directory
+. Prepare the English version simultaneously and place it in the corresponding EN directory
+. Update both CN and EN `nav.adoc` and `ecosystem_overview.adoc`
+
+==== Submit PR
+
+. Link the corresponding Issue number in the PR title or description (e.g., `Fixes #123`)
+. In the PR description, explain:
+* The adapted component name and version
+* Test environment information
+* Completed test items
+* Known limitations or issues
+
+==== Await Review
+
+Maintainers will review the PR and may suggest the following modifications:
+
+* Add missing test cases
+* Fix documentation format issues
+* Improve Oracle compatibility testing
+* Add English translation
+
+Please revise and update the PR promptly based on review feedback.
+
+== Frequently Asked Questions
+
+=== Compilation Error: Cannot Find pg_config
+
+Please confirm the `PG_CONFIG` environment variable is set correctly, pointing to `bin/pg_config` under the IvorySQL installation directory. You can verify with:
+
+[literal]
+----
+$PG_CONFIG --version
+----
+
+=== Extension Creation Fails
+
+Please check:
+
+. Whether the extension's `.so` file is correctly installed in IvorySQL's `lib` directory
+. Whether the extension's `.sql` and `.control` files are correctly installed in the `share/extension` directory
+. Whether the IvorySQL version is compatible with the PostgreSQL version required by the component
+
+=== Functionality Issues in Oracle Compatibility Mode
+
+Some PostgreSQL extensions rely on the native PG parser and may not work correctly in Oracle compatibility mode. When encountering such issues, clearly state the limitations in the document's "Oracle Compatibility" section and provide alternative solutions if available.
+
+=== Unsure Whether a Component Is Suitable for Adaptation
+
+Please start a discussion in https://github.com/IvorySQL/ivorysql_docs[Issues], describing the component's functionality and your adaptation plan. Maintainers will provide an assessment.
