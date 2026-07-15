@@ -72,6 +72,7 @@
 *** xref:master/ecosystem_components/pgdog.adoc[PgDog]
 *** xref:master/ecosystem_components/pg_readonly.adoc[pg_readonly]
 *** xref:master/ecosystem_components/zhparser.adoc[zhparser]
+*** xref:master/ecosystem_components/pgbackrest.adoc[pgBackRest]
 * 监控运维
 ** xref:master/getting-started/daily_monitoring.adoc[日常监控]
 ** xref:master/getting-started/daily_maintenance.adoc[日常维护]
