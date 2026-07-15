@@ -118,5 +118,5 @@ ivorysql=# ALTER TABLE t2 ADD FOREIGN KEY (c1) REFERENCES source (id);
 ERROR:  attempt to create referential integrity constraint on global temporary table
 ----
 
-For more detailed usage and advanced features, please refer to https://github.com/amutu/pgtt .
+For more detailed usage and advanced features, please refer to https://github.com/darold/pgtt .
 
