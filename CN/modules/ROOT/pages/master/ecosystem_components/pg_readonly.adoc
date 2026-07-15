@@ -26,9 +26,9 @@ DCL 语句 GRANT 与 REVOKE 也是禁止的；
 
 [literal]
 ----
-# 从 https://github.com/pierreforstmann/pg_readonly/releases/tag/1.0.5 下载 1.0.5 的源码包 1.0.5.tar.gz
-tar xvf 1.0.5.tar.gz
-cd pg_readonly-1.0.5
+# 从 https://github.com/pierreforstmann/pg_readonly/releases/tag/1.0.6 下载 1.0.6 的源码包 1.0.6.tar.gz
+tar xvf 1.0.6.tar.gz
+cd pg_readonly-1.0.6
 
 # 编译安装
 make PG_CONFIF=/path-to/ivorysql/bin/pg_config 
@@ -50,7 +50,7 @@ CREATE EXTENSION
 ivorysql=# SELECT * FROM pg_available_extensions WHERE name = 'pg_readonly';
     name     | default_version | installed_version | location |          comment           
 -------------+-----------------+-------------------+----------+----------------------------
- pg_readonly | 1.0.4           | 1.0.4             | $system  | cluster database read only
+ pg_readonly | 1.0.6           | 1.0.6             | $system  | cluster database read only
 (1 row)
 ----
 
@@ -90,5 +90,5 @@ create table tmp(c text);
 ERROR:  cannot execute UPDATE in a read-only transaction
 ----
 
-更多详细使用方法和高级特性，请参阅 https://github.com/pierreforstmann/pg_readonly [pg_readonly官方文档]。
+更多详细使用方法和高级特性，请参阅 https://github.com/pierreforstmann/pg_readonly 。
 

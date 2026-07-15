@@ -26,9 +26,9 @@ The source installation environment is Ubuntu 24.04 (x86_64), with IvorySQL alre
 
 [literal]
 ----
-# Download the 1.0.5 source package 1.0.5.tar.gz from https://github.com/pierreforstmann/pg_readonly/releases/tag/1.0.5
-tar xvf 1.0.5.tar.gz
-cd pg_readonly-1.0.5
+# Download the 1.0.6 source package 1.0.6.tar.gz from https://github.com/pierreforstmann/pg_readonly/releases/tag/1.0.6
+tar xvf 1.0.6.tar.gz
+cd pg_readonly-1.0.6
 
 # Compile and install
 make PG_CONFIF=/path-to/ivorysql/bin/pg_config
@@ -50,7 +50,7 @@ CREATE EXTENSION
 ivorysql=# SELECT * FROM pg_available_extensions WHERE name = 'pg_readonly';
     name     | default_version | installed_version | location |          comment
 -------------+-----------------+-------------------+----------+----------------------------
- pg_readonly | 1.0.4           | 1.0.4             | $system  | cluster database read only
+ pg_readonly | 1.0.6           | 1.0.6             | $system  | cluster database read only
 (1 row)
 ----
 
@@ -90,5 +90,5 @@ create table tmp(c text);
 ERROR:  cannot execute UPDATE in a read-only transaction
 ----
 
-For more detailed usage and advanced features, please refer to the https://github.com/pierreforstmann/pg_readonly [official pg_readonly documentation].
+For more detailed usage and advanced features, please refer to the https://github.com/pierreforstmann/pg_readonly .
 
