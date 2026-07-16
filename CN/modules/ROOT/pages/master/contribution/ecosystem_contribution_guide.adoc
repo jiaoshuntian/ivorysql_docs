@@ -11,46 +11,35 @@ IvorySQL 作为一款基于 PostgreSQL 研发的 Oracle 兼容数据库，天然
 
 == 适配范围
 
-=== 适合的组件类型
-
 以下类型的组件欢迎贡献者进行适配：
 
-* PostgreSQL 社区官方扩展（contrib 模块或知名第三方扩展）
-* 基于 PostgreSQL 扩展机制开发的工具类插件
-* 与数据库运维、监控、性能分析相关的工具
-* 数据迁移、同步、备份相关的工具
-* 全文检索、向量检索、图数据库等增强型扩展
-* 连接池、代理、中间件等周边生态工具
-
-=== 不适合的组件
-
-* 依赖特定操作系统或硬件架构且无法在主流平台运行的组件
-* 与 IvorySQL Oracle 兼容模式存在根本性冲突且无法解决的组件
-* 已停止维护或存在严重安全问题的组件
-* 商业闭源且无法提供社区测试版本的组件
+* PostgreSQL 社区官方扩展（contrib 模块）
+* 基于 PostgreSQL 扩展机制开发的第三方插件
+* 以独立进程形式与数据库配合工作的周边生态工具，如连接池、代理、中间件等
 
 == 贡献流程
 
+生态组件适配，是将 PostgreSQL 生态组件适配到 IvorySQL 的工作。主要内容包括：了解目标组件的特点、原理和使用方式，测试其在 IvorySQL 的 PG 模式和 Oracle 兼容模式下能否正常使用；最后基于上述调研与测试结果，编写一篇生态组件适配文档，提交到 https://github.com/IvorySQL/ivorysql_docs[IvorySQL docs] 仓库。文档提交后，维护者会按照适配文档中给出的步骤对目标组件进行复现测试，确认测试结果与文档描述一致后，合并该 PR。
+
+具体的选题、测试、文档编写等环节，请参考下面的详细步骤。
+
 === 第一步：选题与沟通
 
-==== 查找已有适配
+==== 确认组件未被适配
 
-在开始适配工作之前，请先查阅 xref:master/ecosystem_components/ecosystem_overview.adoc[生态插件适配列表]，确认目标组件是否已完成适配。
+在开始适配工作之前，请先查阅 xref:master/ecosystem_components/ecosystem_overview.adoc[生态组件适配列表]，确认目标组件是否已完成适配。如果目标组件不在列表中，则继续后面的流程；否则，请重新选择一个未适配的组件。
 
-==== 提交 Issue
+==== 认领或新建 Issue
 
-如果您希望适配一个尚未收录的组件，请首先在 https://github.com/IvorySQL/ivorysql_docs[ivorysql_docs 仓库] 提交一个 Issue，说明以下内容：
+在 IvorySQL 仓库的 https://github.com/IvorySQL/IvorySQL/issues[Issue 列表] 中搜索目标组件：
 
-* 组件名称及项目地址
-* 组件功能描述及适用场景
-* 组件的开源协议
-* 组件最近的维护状态（是否活跃维护）
-* 您计划适配的组件版本
+- 如果相关适配 Issue 已存在，先确认其尚未被分配（Assignees 为空），然后点击右上角 Assignees 区域的 `Assign yourself`，将该 Issue 认领给自己；若已被他人认领，请重新选择组件；
+- 如果相关 Issue 尚不存在，则新建一个 `Feature Request` 类型的 Issue，添加 `compatibility` 标签，并分配给自己。新建 Issue 的格式可参考已有的生态组件适配类 Issue：标题格式为 `Ecosystem Integration: <组件名>`，正文用一句话说明要适配的组件及其用途。
 
 维护者会评估该组件是否适合纳入 IvorySQL 生态，并在 Issue 中与您沟通确认。
 
 [TIP]
-建议在 Issue 获得维护者确认后再开始适配工作，避免无效劳动。
+建议在 Issue 获得维护者确认后再开始适配工作，避免重复或无效工作。
 
 ==== 签署 CLA
 
@@ -79,69 +68,82 @@ IvorySQL 作为一款基于 PostgreSQL 研发的 Oracle 兼容数据库，天然
 
 === 第三步：适配测试
 
-==== 源码编译
+生态组件适配的目标分为两个层面：
 
-从组件的官方仓库获取源码，按照以下步骤进行编译：
+- PG 模式：组件必须完全可用。
+- Oracle 兼容模式：应尽可能做到完全可用；若无法完全可用，至少应保证主要功能可以正常运行。对于底层机制与 Oracle 兼容模式冲突、完全无法在该模式下运行的 PG 专用扩展（例如 pg_partman 专为管理 PostgreSQL 分区表而设计，不支持在 Oracle 兼容模式下运行），需在适配文档和 PR 描述中说明情况。
 
-. 设置 `PG_CONFIG` 环境变量指向 IvorySQL 的 `pg_config`
-+
-[literal]
-----
-export PG_CONFIG=/usr/local/ivorysql/ivorysql-5/bin/pg_config
-----
+==== 组件编译安装
 
-. 按照组件官方文档进行编译安装
-+
-[literal]
-----
-# 以某扩展为例
-git clone <组件源码仓库地址>
-cd <组件目录>
-make
-sudo make install
-----
+请参考目标组件的官方文档进行编译安装。
 
-==== 功能验证
+==== 测试 PG 模式
 
-编译安装成功后，需要进行以下验证：
+启动 IvorySQL 实例，使用 psql 通过 5432 端口连接数据库，进行以下验证：
 
-. *扩展创建验证*：在 IvorySQL 中执行 `CREATE EXTENSION` 创建扩展，确认扩展可以正常加载
+. 扩展创建验证（仅适用于扩展类组件）：执行 `CREATE EXTENSION` 确认扩展可以正常创建，并确认版本与预期一致；
 +
 [literal]
 ----
 ivorysql=# CREATE EXTENSION <扩展名>;
-CREATE EXTENSION
-----
-
-. *版本确认*：确认安装的扩展版本与预期一致
-+
-[literal]
-----
 ivorysql=# SELECT * FROM pg_available_extensions WHERE name = '<扩展名>';
 ----
-
-. *功能测试*：根据组件文档提供的功能用例，逐一验证核心功能是否正常工作
-. *边界测试*：测试一些边界条件和异常场景，确认扩展的健壮性
-
-==== Oracle 兼容性测试
-
-如果目标组件需要在 IvorySQL 的 Oracle 兼容模式下使用，还需要进行额外的兼容性测试：
-
-. 使用 1521 端口（Oracle 兼容模式默认端口）连接数据库
 +
-[literal]
-----
-psql -p 1521
-----
+[NOTE]
+通过 `shared_preload_libraries` 加载的钩子类组件无需此步骤，改为确认预加载后实例正常启动、组件行为生效。
 
-. 测试组件在 Oracle 兼容模式下的数据类型兼容性
-. 测试组件功能是否支持 Oracle 风格的匿名块、存储过程、函数等
-. 记录所有兼容性问题及解决方案
+. 功能测试：根据组件文档提供的功能用例，逐一验证核心功能是否正常工作；
+. 回归测试：如果组件源码自带测试用例，应运行并确保其全部通过；
+. 边界测试：测试边界条件和异常场景，确认组件的健壮性。
+
+如果某个功能无法使用或测试失败，需排查原因：属于 IvorySQL 侧的问题，请向 IvorySQL 仓库提交 PR 修复；属于组件侧的问题，可向组件仓库反馈，并在适配文档中记录该限制。
+
+==== 测试 Oracle 兼容模式
+
+使用 psql 通过 1521 端口（Oracle 兼容端口）连接数据库，进行以下验证：
+
+. 参照 PG 模式的测试方法验证组件的主要功能；
+. 测试组件在 Oracle 兼容模式下的数据类型兼容性；
+. 测试组件功能是否支持 Oracle 风格的匿名块、存储过程、函数等。
+
+记录各功能在 Oracle 兼容模式下是否可用，作为适配文档中功能覆盖说明的依据。
+
+测试时请注意以下两点：
+
+* *使用 Oracle 语法编写测试语句*。Oracle 兼容模式下的部分语法与 PG 模式不同，不能直接照搬 PG 模式的测试用例。例如：interval 类型需使用 Oracle 风格的语法，而非 PG 语法；`CREATE FUNCTION`、`CREATE PROCEDURE` 等语句需在末尾另起一行加 `/` 作为结束符。
+* *区分“输出差异”与“功能异常”*。部分输出与 PG 模式不一致属于正常现象，不应记为兼容性问题。例如：某些输出中的类型名会带有 `pg_catalog.` 模式前缀。判断功能是否正常，应以执行结果的语义是否正确为准，而不要求输出文本与 PG 模式逐字一致。
+
+记录各功能在 Oracle 兼容模式下是否可用，作为适配文档中功能覆盖说明的依据。
 
 [NOTE]
-并非所有组件都支持 Oracle 兼容模式。如果组件依赖 PostgreSQL 特有的内部机制（如使用 `pg_query` 模块进行语句解析），可能无法在 Oracle 兼容模式下运行，需要在文档中明确说明。
+并非所有组件都能在 Oracle 兼容模式下工作。如果执行 `CREATE EXTENSION` 或调用组件功能时因语法错误而失败，多是组件内部使用了 Oracle 不支持的 PG 专用语法所致，请参考下一节的 PG 语法白名单机制进行修复；如果组件与 Oracle 兼容模式在底层机制上冲突（如 pg_partman），则需要在适配文档和 PR 描述中明确说明。
+
+==== 通过 PG 语法白名单修复兼容问题
+
+Oracle 兼容模式测试不通过——尤其是执行 `CREATE EXTENSION` 就直接失败——的一个常见原因是：扩展通过 SQL 脚本实现，脚本中大量使用了 Oracle 不支持的 PG 专用语法（如 PG 风格的 interval 表达式、数组切片等），导致脚本无法通过 Oracle 兼容模式下的语法解析。
+
+针对这种情况，IvorySQL 内核提供了 PG 语法白名单机制（见 `src/backend/commands/extension.c` 中的 `PgDialectExtensions` 列表）。扩展加入白名单后，在 Oracle 兼容模式集群中执行 `CREATE EXTENSION` 时：
+
+* 扩展的安装脚本会临时改用 PG 解析器解析执行，不受当前会话兼容模式的影响；
+* 安装脚本所创建的函数会被自动注入 `SET ivorysql.compatible_mode = pg` 配置，此后无论从哪种兼容模式的会话调用，函数体都由 PG 解析器解析执行。
+
+借助该机制，使用 PG 专用语法实现的扩展无需修改任何代码，即可在 Oracle 兼容模式集群中正常安装和运行。目前白名单中已包含 pg_profile、pg_repack 等扩展。
+
+该方式适用于：
+
+* 扩展主要通过 SQL 或 PL/pgSQL 实现，因使用 PG 专用语法导致 `CREATE EXTENSION` 或函数调用在 Oracle 兼容模式下失败；
+* 扩展功能自成一体（如统计信息采集、表重组等管理类扩展），用户只需调用其入口函数，不要求其内部实现与 Oracle 风格对象交互。
+
+该方式不适用于：
+
+* 扩展需要与用户创建的 Oracle 风格对象（存储过程、Oracle 专有数据类型等）深度交互，强制按 PG 语法解析会破坏这种交互；
+* 扩展与 Oracle 兼容模式在底层机制上冲突（如 pg_partman 依赖 PostgreSQL 原生的分区表管理），此类问题不在语法解析层面，白名单无法解决，仍需在适配文档和 PR 描述中说明限制。
+
+确认目标扩展属于适用场景后，您可以向 IvorySQL 仓库提交 PR，将扩展名加入 `PgDialectExtensions` 白名单，并在 PR 描述中附上两种模式下的测试结果；同时在适配文档的 "Oracle 兼容性" 章节中说明该扩展通过白名单机制运行。
 
 === 第四步：文档编写
+
+IvorySQL 文档使用 AsciiDoc 编写的，其语法与 Markdown 类似但功能更加强大。如果不熟悉 AsciiDoc 语法，可参阅 xref:master/contribution/asciidoc_syntax_reference.adoc[asciidoc语法快速参考]。
 
 ==== 文档结构
 
@@ -161,13 +163,13 @@ psql -p 1521
 |详细的安装步骤，包括依赖安装、源码获取、编译安装、扩展创建等
 
 |配置
-|（可选）如果组件需要额外的配置步骤（如修改 `ivorysql.conf`、重启服务等），在此说明
+|如果组件需要额外的配置步骤（如修改 `ivorysql.conf`、重启服务等），在此说明
 
 |使用
 |核心功能的使用示例，包括创建对象、执行操作、查询结果等
 
 |Oracle 兼容性
-|（可选）组件在 Oracle 兼容模式下的表现，包括支持的功能和已知限制
+|组件在 Oracle 兼容模式下的表现，包括支持的功能和已知限制
 |===
 
 ==== 文档模板
@@ -251,7 +253,7 @@ ivorysql=# SELECT * FROM pg_available_extensions WHERE name = '<扩展名>';
 
 ==== 创建分支
 
-在您的 fork 仓库中创建特性分支：
+生态组件适配文档统一提交到 https://github.com/IvorySQL/ivorysql_docs[IvorySQL docs] 仓库（注意：不是创建 Issue 的 IvorySQL 主仓库）。请先 fork 该仓库并 clone 到本地，然后创建特性分支：
 
 [literal]
 ----
@@ -263,20 +265,27 @@ git checkout -b feature/adapt-<组件名称>
 . 将文档文件放入 `CN/modules/ROOT/pages/master/ecosystem_components/` 目录
 . 如有图片资源，放入 `CN/modules/ROOT/images/` 目录
 . 同步准备英文版本，放入对应的 EN 目录
-. 更新 CN 和 EN 的 `nav.adoc` 和 `ecosystem_overview.adoc`
+. 更新 CN 和 EN 的 `nav.adoc` 和 `ecosystem_overview.adoc` 里的链接
 
-==== 提交 PR
+==== 创建 PR
 
-. 在 PR 标题或描述中关联对应的 Issue 编号（如 `Fixes #123`）
+. 向 https://github.com/IvorySQL/ivorysql_docs[IvorySQL docs] 仓库的 master 分支提交 PR
+. 在 PR 描述中使用 `Fixes IvorySQL/IvorySQL#<编号>` 关联第一步中认领或新建的适配 Issue
 . 在 PR 描述中说明：
 * 适配的组件名称和版本
 * 测试环境信息
 * 已完成的测试项目
 * 已知的限制或问题
 
+[NOTE]
+====
+. 由于 Issue 位于 IvorySQL 主仓库，必须使用 `IvorySQL/IvorySQL#编号` 的完整引用格式；PR 合并后，对应 Issue 会被自动关闭。
+. 关联关键字必须写在 IvorySQL docs 仓库提交的 PR 描述中且拼写规范（`Fixes`/`Closes`/`Resolves` + 空格 + `IvorySQL/IvorySQL#<编号>`），写在评论里无效。
+====
+
 ==== 等待评审
 
-维护者会对 PR 进行评审，可能会提出以下修改建议：
+维护者会按照文档中的步骤复现测试，并对 PR 进行评审，可能会提出以下修改建议：
 
 * 补充缺失的测试用例
 * 修正文档格式问题
@@ -303,6 +312,7 @@ $PG_CONFIG --version
 . 扩展的 `.so` 文件是否正确安装到 IvorySQL 的 `lib` 目录
 . 扩展的 `.sql` 和 `.control` 文件是否正确安装到 `share/extension` 目录
 . IvorySQL 版本是否与组件要求的 PostgreSQL 版本兼容
+. 若失败原因是 PG 专用语法无法解析，可参考第三步的 PG 语法白名单机制。
 
 === Oracle 兼容模式下功能异常
 
@@ -310,4 +320,5 @@ $PG_CONFIG --version
 
 === 不确定组件是否适合适配
 
-请先在 https://github.com/IvorySQL/ivorysql_docs[Issues] 中发起讨论，描述组件的功能和您的适配计划，维护者会给出评估意见。
+请先在 https://github.com/IvorySQL/IvorySQL/issues[Issues] 中发起讨论，描述组件的功能和您的适配计划，维护者会给出评估意见。
+

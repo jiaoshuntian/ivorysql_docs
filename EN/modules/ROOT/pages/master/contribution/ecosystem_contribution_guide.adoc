@@ -11,46 +11,35 @@ This document provides complete guidance for contributors who want to participat
 
 == Adaptation Scope
 
-=== Suitable Component Types
-
 The following types of components are welcome for adaptation contributions:
 
-* Official PostgreSQL community extensions (contrib modules or well-known third-party extensions)
-* Utility plugins developed based on PostgreSQL's extension mechanism
-* Tools related to database operations, monitoring, and performance analysis
-* Tools related to data migration, synchronization, and backup
-* Enhanced extensions such as full-text search, vector search, and graph databases
-* Peripheral ecosystem tools such as connection pools, proxies, and middleware
-
-=== Unsuitable Components
-
-* Components that depend on specific operating systems or hardware architectures and cannot run on mainstream platforms
-* Components that have fundamental conflicts with IvorySQL's Oracle compatibility mode and cannot be resolved
-* Components that are no longer maintained or have serious security issues
-* Commercial closed-source components that cannot provide community test versions
+* Official PostgreSQL community extensions (contrib modules)
+* Third-party plugins developed based on PostgreSQL's extension mechanism
+* Peripheral ecosystem tools that work alongside the database as independent processes, such as connection pools, proxies, and middleware
 
 == Contribution Process
 
+Ecosystem component adaptation is the work of adapting PostgreSQL ecosystem components to run on IvorySQL. The main activities include: understanding the target component's characteristics, principles, and usage; testing whether it works correctly under IvorySQL's PG mode and Oracle compatibility mode; and finally, based on the above research and testing, writing an ecosystem component adaptation document and submitting it to the https://github.com/IvorySQL/ivorysql_docs[IvorySQL docs] repository. After the document is submitted, maintainers will reproduce the test of the target component following the steps given in the adaptation document; once they confirm the test results are consistent with the document, they will merge the PR.
+
+For the specific steps of topic selection, testing, and documentation writing, please refer to the detailed steps below.
+
 === Step 1: Topic Selection and Communication
 
-==== Check Existing Adaptations
+==== Confirm the Component Is Not Yet Adapted
 
-Before starting adaptation work, please check the xref:master/ecosystem_components/ecosystem_overview.adoc[Ecosystem Plugin Compatibility List] to confirm whether the target component has already been adapted.
+Before starting adaptation work, please check the xref:master/ecosystem_components/ecosystem_overview.adoc[Ecosystem Component Adaptation List] to confirm whether the target component has already been adapted. If the target component is not in the list, continue with the following process; otherwise, please choose another unadapted component.
 
-==== Submit an Issue
+==== Claim or Create an Issue
 
-If you want to adapt a component not yet included, please first submit an Issue on the https://github.com/IvorySQL/ivorysql_docs[ivorysql_docs repository], including the following information:
+Search for the target component in the https://github.com/IvorySQL/IvorySQL/issues[Issue list] of the IvorySQL repository:
 
-* Component name and project URL
-* Component description and use cases
-* Component's open-source license
-* Recent maintenance status (whether actively maintained)
-* The component version you plan to adapt
+- If a related adaptation Issue already exists, first confirm it has not yet been assigned (the Assignees field is empty), then click `Assign yourself` in the Assignees area in the upper-right corner to claim the Issue; if it has already been claimed by someone else, please choose another component.
+- If no related Issue exists yet, create a new `Feature Request` Issue, add the `compatibility` label, and assign it to yourself. You can refer to existing ecosystem component adaptation Issues for the format: the title should follow the pattern `Ecosystem Integration: <component_name>`, and the body should describe the component to be adapted and its use in one sentence.
 
 Maintainers will evaluate whether the component is suitable for inclusion in the IvorySQL ecosystem and communicate with you through the Issue.
 
 [TIP]
-It is recommended to start adaptation work only after receiving confirmation from maintainers to avoid unnecessary effort.
+It is recommended to start adaptation work only after receiving confirmation from maintainers to avoid duplicate or unnecessary work.
 
 ==== Sign the CLA
 
@@ -79,67 +68,78 @@ Prepare the appropriate toolchain based on the target component's build method:
 
 === Step 3: Adaptation Testing
 
-==== Source Compilation
+The goals of ecosystem component adaptation are divided into two levels:
 
-Obtain the source code from the component's official repository and compile it following these steps:
+- PG mode: the component must be fully usable.
+- Oracle compatibility mode: it should be fully usable if possible; if it cannot be fully usable, at least the core functionality should work normally. For PG-specific extensions whose underlying mechanisms fundamentally conflict with Oracle compatibility mode and cannot run in this mode at all (for example, pg_partman, which is designed specifically to manage PostgreSQL partitioned tables and does not support running in Oracle compatibility mode), you must explain the situation in the adaptation document and the PR description.
 
-. Set the `PG_CONFIG` environment variable to point to IvorySQL's `pg_config`
-+
-[literal]
-----
-export PG_CONFIG=/usr/local/ivorysql/ivorysql-5/bin/pg_config
-----
+==== Compile and Install the Component
 
-. Compile and install according to the component's official documentation
-+
-[literal]
-----
-# Taking an extension as an example
-git clone <component source repository URL>
-cd <component directory>
-make
-sudo make install
-----
+Please refer to the target component's official documentation for compilation and installation.
 
-==== Functionality Verification
+==== Test PG Mode
 
-After successful compilation and installation, perform the following verifications:
+Start an IvorySQL instance, connect to the database with psql through port 5432, and perform the following verifications:
 
-. *Extension creation verification*: Execute `CREATE EXTENSION` in IvorySQL to create the extension and confirm it loads correctly
+. Extension creation verification (only for extension-type components): run `CREATE EXTENSION` to confirm the extension can be created normally, and confirm the version matches expectations;
 +
 [literal]
 ----
 ivorysql=# CREATE EXTENSION <extension_name>;
-CREATE EXTENSION
-----
-
-. *Version confirmation*: Confirm the installed extension version matches expectations
-+
-[literal]
-----
 ivorysql=# SELECT * FROM pg_available_extensions WHERE name = '<extension_name>';
 ----
-
-. *Functionality testing*: Verify core functionality works correctly by following the test cases provided in the component documentation
-. *Boundary testing*: Test boundary conditions and exception scenarios to confirm the extension's robustness
-
-==== Oracle Compatibility Testing
-
-If the target component needs to be used in IvorySQL's Oracle compatibility mode, additional compatibility testing is required:
-
-. Connect to the database using port 1521 (the default port for Oracle compatibility mode)
 +
-[literal]
-----
-psql -p 1521
-----
+[NOTE]
+Hook-type components loaded via `shared_preload_libraries` do not need this step; instead, confirm that after preloading the instance starts normally and the component's behavior takes effect.
 
-. Test data type compatibility in Oracle compatibility mode
-. Test whether component functionality supports Oracle-style anonymous blocks, stored procedures, functions, etc.
-. Document all compatibility issues and solutions
+. Functionality testing: verify the core functionality item by item according to the test cases provided in the component documentation;
+. Regression testing: if the component's source code ships with its own test cases, run them and ensure they all pass;
+. Boundary testing: test boundary conditions and exception scenarios to confirm the component's robustness.
+
+If a certain function cannot be used or a test fails, investigate the cause: if it is an IvorySQL-side issue, open a PR against the IvorySQL repository to fix it; if it is a component-side issue, report it to the component's repository and record the limitation in the adaptation document.
+
+==== Test Oracle Compatibility Mode
+
+Connect to the database with psql through port 1521 (the Oracle compatibility port) and perform the following verifications:
+
+. Verify the component's main functionality following the same testing method as in PG mode;
+. Test the component's data type compatibility in Oracle compatibility mode;
+. Test whether the component's functionality supports Oracle-style anonymous blocks, stored procedures, functions, etc.
+
+Record whether each function is available in Oracle compatibility mode; this serves as the basis for the functional coverage statement in the adaptation document.
+
+Please note two things when testing:
+
+* *Write test statements using Oracle syntax.* Some syntax in Oracle compatibility mode differs from PG mode, so you cannot simply copy the PG-mode test cases. For example: the `interval` type must use Oracle-style syntax rather than PG syntax; statements such as `CREATE FUNCTION` and `CREATE PROCEDURE` must end with a `/` on its own line as the terminator.
+* *Distinguish between "output differences" and "functional issues."* Some output that differs from PG mode is normal and should not be recorded as a compatibility issue. For example, type names in some output may carry a `pg_catalog.` schema prefix. To judge whether a function works normally, base it on whether the execution result is semantically correct, rather than requiring the output text to match the PG mode character for character.
+
+Record whether each function is available in Oracle compatibility mode; this serves as the basis for the functional coverage statement in the adaptation document.
 
 [NOTE]
-Not all components support Oracle compatibility mode. If a component relies on PostgreSQL-specific internal mechanisms (such as using the `pg_query` module for statement parsing), it may not work in Oracle compatibility mode. This must be clearly stated in the documentation.
+Not all components can work in Oracle compatibility mode. If running `CREATE EXTENSION` or calling a component function fails due to a syntax error, it is usually because the component internally uses PG-specific syntax that Oracle does not support; please refer to the PG syntax whitelist mechanism in the next section to fix it. If the component fundamentally conflicts with Oracle compatibility mode at the underlying-mechanism level (such as pg_partman), you must clearly state this in the adaptation document and the PR description.
+
+==== Fix Compatibility Issues via the PG Syntax Whitelist
+
+A common reason why Oracle compatibility mode testing fails — especially when `CREATE EXTENSION` fails outright — is that the extension is implemented through SQL scripts that make heavy use of PG-specific syntax that Oracle does not support (such as PG-style `interval` expressions and array slicing), so the scripts cannot pass syntax parsing under Oracle compatibility mode.
+
+To address this, the IvorySQL kernel provides a PG syntax whitelist mechanism (see the `PgDialectExtensions` list in `src/backend/commands/extension.c`). After an extension is added to the whitelist, running `CREATE EXTENSION` in an Oracle compatibility mode cluster will:
+
+* Temporarily parse and execute the extension's install script with the PG parser, unaffected by the current session's compatibility mode;
+* Automatically inject the `SET ivorysql.compatible_mode = pg` setting into the functions created by the install script, so that no matter which compatibility mode the calling session uses, the function body is always parsed and executed by the PG parser.
+
+With this mechanism, extensions implemented using PG-specific syntax can be installed and run normally in an Oracle compatibility mode cluster without modifying any code. The whitelist currently includes extensions such as pg_profile and pg_repack.
+
+This approach applies to:
+
+* Extensions that are mainly implemented in SQL or PL/pgSQL and fail `CREATE EXTENSION` or function calls in Oracle compatibility mode because they use PG-specific syntax;
+* Extensions whose functionality is self-contained (such as management-type extensions for statistics collection, table reorganization, etc.), where users only call their entry functions and do not require their internal implementation to interact with Oracle-style objects.
+
+This approach does not apply to:
+
+* Extensions that need to interact deeply with user-created Oracle-style objects (stored procedures, Oracle-specific data types, etc.); forcing them to be parsed as PG syntax would break such interaction;
+* Extensions that fundamentally conflict with Oracle compatibility mode at the underlying-mechanism level (such as pg_partman, which depends on PostgreSQL's native partitioned-table management). Such problems are not at the syntax-parsing level and cannot be solved by the whitelist; you must still state the limitation in the adaptation document and the PR description.
+
+Once you confirm that the target extension falls into the applicable scenario, you can open a PR against the IvorySQL repository to add the extension name to the `PgDialectExtensions` whitelist, and attach the test results from both modes in the PR description; at the same time, state in the "Oracle Compatibility" section of the adaptation document that the extension runs through the whitelist mechanism.
 
 === Step 4: Documentation Writing
 
@@ -161,13 +161,13 @@ Each ecosystem component adaptation document should include the following sectio
 |Detailed installation steps, including dependency installation, source acquisition, compilation, extension creation, etc.
 
 |Configuration
-|(Optional) If the component requires additional configuration steps (such as modifying `ivorysql.conf`, restarting services, etc.), explain them here
+|If the component requires additional configuration steps (such as modifying `ivorysql.conf`, restarting services, etc.), explain them here
 
 |Usage
 |Usage examples for core functionality, including object creation, operation execution, query results, etc.
 
 |Oracle Compatibility
-|(Optional) Component behavior in Oracle compatibility mode, including supported features and known limitations
+|Component behavior in Oracle compatibility mode, including supported features and known limitations
 |===
 
 ==== Document Template
@@ -251,7 +251,7 @@ Both the Chinese and English versions of the overview page need to be updated.
 
 ==== Create Branch
 
-Create a feature branch in your forked repository:
+Ecosystem component adaptation documents are submitted to the https://github.com/IvorySQL/ivorysql_docs[IvorySQL docs] repository (note: this is not the IvorySQL main repository where you create Issues). Please first fork the repository and clone it locally, then create a feature branch:
 
 [literal]
 ----
@@ -263,25 +263,32 @@ git checkout -b feature/adapt-<component_name>
 . Place the documentation file in the `CN/modules/ROOT/pages/master/ecosystem_components/` directory
 . If there are image resources, place them in the `CN/modules/ROOT/images/` directory
 . Prepare the English version simultaneously and place it in the corresponding EN directory
-. Update both CN and EN `nav.adoc` and `ecosystem_overview.adoc`
+. Update the links in both the CN and EN `nav.adoc` and `ecosystem_overview.adoc`
 
-==== Submit PR
+==== Create PR
 
-. Link the corresponding Issue number in the PR title or description (e.g., `Fixes #123`)
+. Open a PR against the `master` branch of the https://github.com/IvorySQL/ivorysql_docs[IvorySQL docs] repository.
+. Use `Fixes IvorySQL/IvorySQL#<number>` in the PR description to link the adaptation Issue you claimed or created in Step 1
 . In the PR description, explain:
 * The adapted component name and version
 * Test environment information
 * Completed test items
 * Known limitations or issues
 
+[NOTE]
+====
+. Since the Issue lives in the IvorySQL main repository, you must use the full reference format `IvorySQL/IvorySQL#<number>`; once the PR is merged, the corresponding Issue is closed automatically.
+. The linking keyword must be written in the PR description submitted to the IvorySQL docs repository and spelled correctly (`Fixes`/`Closes`/`Resolves` + a space + `IvorySQL/IvorySQL#<number>`); writing it in a comment has no effect.
+====
+
 ==== Await Review
 
-Maintainers will review the PR and may suggest the following modifications:
+Maintainers will reproduce the test following the steps in the document and review the PR. They may suggest the following modifications:
 
 * Add missing test cases
 * Fix documentation format issues
 * Improve Oracle compatibility testing
-* Add English translation
+* Add the English translation
 
 Please revise and update the PR promptly based on review feedback.
 
@@ -303,6 +310,7 @@ Please check:
 . Whether the extension's `.so` file is correctly installed in IvorySQL's `lib` directory
 . Whether the extension's `.sql` and `.control` files are correctly installed in the `share/extension` directory
 . Whether the IvorySQL version is compatible with the PostgreSQL version required by the component
+. If the failure is caused by PG-specific syntax that cannot be parsed, refer to the PG syntax whitelist mechanism in Step 3.
 
 === Functionality Issues in Oracle Compatibility Mode
 
@@ -310,4 +318,5 @@ Some PostgreSQL extensions rely on the native PG parser and may not work correct
 
 === Unsure Whether a Component Is Suitable for Adaptation
 
-Please start a discussion in https://github.com/IvorySQL/ivorysql_docs[Issues], describing the component's functionality and your adaptation plan. Maintainers will provide an assessment.
+Please start a discussion in https://github.com/IvorySQL/IvorySQL/issues[Issues], describing the component's functionality and your adaptation plan. Maintainers will provide an assessment.
+
