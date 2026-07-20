@@ -16,8 +16,6 @@ The IvorySQL community believes that open source should be approachable and that
 
 If you are not ready to submit code yet, you can still make a meaningful contribution by reproducing issues, clarifying requirements, improving docs, or helping other users in community discussions.
 
-For detailed information about contributor recognition and incentive policies, please visit the https://www.ivorysql.org/contribution-guidelines[IvorySQL official website contribution guidelines page].
-
 == Community Collaboration Process
 
 The IvorySQL community employs a closed-loop open-source collaboration process, ensuring that every step—from issue submission to version release—receives closed feedback and continuous improvement. This process encourages良性互动 between users and developers, allowing community development to evolve around actual needs.
