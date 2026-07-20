@@ -40,7 +40,7 @@ IvorySQL由一个核心开发团队维护，该团队拥有对GitHub上的IvoryS
 * 发现 Bug、性能缺陷或文档不准确？
 * 有新的功能建议或使用体验改进？
 
-如果您准备向社区上报 Bug 或者提交需求，请在 IvorySQL 社区对应的仓库上提交 Issue，并参考 Issue xref:master/contribution/contribution_guide.adoc[提交指南]。
+如果您准备向社区上报 Bug 或者提交需求，请在 IvorySQL 社区对应的仓库上提交 Issue，并参考本指南的 xref:#_提_issue[提交 Issue] 章节。
 
 ==== 参与社区讨论
 
@@ -291,7 +291,7 @@ Title: 标题
 
 == **贡献代码**
 
-=== 第1步: Fork https://ivorysql.org/[ivorysql.org]仓库
+=== 第1步: Fork IvorySQL 仓库
 
 1、打开ivorysql仓库 https://github.com/IvorySQL/IvorySQL 
 
@@ -333,7 +333,7 @@ Git push -u origin new-branch-name
 
 === 第7步：创建一个Pull Request
 
-1、打开你 Fork 的仓库： https://github.com/$user/docs-cn[https://github.com/$user/IvorySQL]（将 $user 替换为你的 GitHub ID）。
+1、打开你 Fork 的仓库（将 $user 替换为你的 GitHub ID）。
 
 2、点击 Compare & pull request 按钮即可创建 PR。
 
@@ -344,7 +344,7 @@ Git push -u origin new-branch-name
 
 === 第1步：创建一个Pull Request
 
-1、打开你 Fork 的仓库： https://github.com/$user/docs-cn[https://github.com/$user/IvorySQL]（将 $user 替换为你的 GitHub ID）。
+1、打开你 Fork 的仓库（将 $user 替换为你的 GitHub ID）。
 
 ​    2、点击 Compare & pull request 按钮
 
