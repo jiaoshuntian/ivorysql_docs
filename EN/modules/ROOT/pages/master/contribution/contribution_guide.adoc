@@ -16,18 +16,7 @@ The IvorySQL community believes that open source should be approachable and that
 
 If you are not ready to submit code yet, you can still make a meaningful contribution by reproducing issues, clarifying requirements, improving docs, or helping other users in community discussions.
 
-== Incentive Policy
-
-To encourage long-term participation, the IvorySQL community continues to improve how contributors are recognized and supported:
-
-* *Recognition*: contributors may receive community digital certificates and be featured on the official https://www.ivorysql.org/contributors[contributor wall] to record their open-source footprint.
-* *Mentorship*: the "Lighthouse" mentoring model helps contributors grow with technical guidance, one-on-one support, and code review feedback from experienced community members.
-* *Community opportunities*: active contributors may receive speaking, sharing, or participation opportunities at community events such as HOW and other technical activities.
-* *Annual incentives*: the community may select outstanding contributors for merchandise, public recognition, ecosystem exposure, and other collaboration opportunities.
-
-Specific arrangements may evolve with community programs, but sustained and valuable contributions are always taken seriously and recognized.
-
-If you are interested in code contributions but are not sure where to start, or if this is your first time contributing to IvorySQL, the guide below is meant to help you find a clear entry point and lower the barrier to participation.
+For detailed information about contributor recognition and incentive policies, please visit the https://www.ivorysql.org/contribution-guidelines[IvorySQL official website contribution guidelines page].
 
 == Community Collaboration Process
 
