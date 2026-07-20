@@ -7,59 +7,6 @@
 
 IvorySQL grows through contributions from developers, testers, documentation writers, translators, community advocates, and users around the world. This guide will help you understand how to participate in the IvorySQL community, from getting started to making in-depth contributions.
 
-== Ways to Contribute
-
-The IvorySQL community believes that open source should be approachable and that no contribution is too small. You can participate in a way that matches your background and interests:
-
-* *Code contributions*: kernel development, feature iteration, bug fixes, plugin development, ecosystem tool adaptation, regression tests, and code review.
-* *Non-code contributions*: issue reports, documentation improvements, technical translation, community Q&A, online or offline talks, case studies, migration experience sharing, and community promotion.
-
-If you are not ready to submit code yet, you can still make a meaningful contribution by reproducing issues, clarifying requirements, improving docs, or helping other users in community discussions.
-
-== Community Collaboration Process
-
-The IvorySQL community employs a closed-loop open-source collaboration process, ensuring that every step—from issue submission to version release—receives closed feedback and continuous improvement. This process encourages良性互动 between users and developers, allowing community development to evolve around actual needs.
-
-The entire closed-loop collaboration process is as follows:
-
-🐛 *Submit Issue*
-
-Users or developers submit bugs, feature suggestions, or usage feedback on the GitHub Issues page.
-
-💬 *Discussion*
-
-Maintainers and community members discuss the issue, confirm its nature and priority, and add it to the ToDo List.
-
-🛠️ *Development Branch (Fork & Dev)*
-
-Developers claim the Issue, fork the repository, develop and test locally, and prepare to submit code.
-
-🚀 *Submit Pull Request (PR)*
-
-Push the development branch to the forked repository and initiate a merge request to the upstream repository.
-
-🧐 *Code Review*
-
-Maintainers or core developers review the PR, provide modification suggestions, and ensure quality.
-
-🔀 *Merge to Main Branch*
-
-After approval, the PR is merged into the main branch, and the corresponding Issue is closed.
-
-📦 *Release*
-
-The project regularly releases new versions (minor versions quarterly, major versions annually), including the latest fixes and features.
-
-🧪 *User Testing*
-
-Users upgrade to the new version, provide feedback on new issues, and new Issues are generated, forming a complete feedback loop.
-
-image::p23.jpg[]
-
-Through this complete closed-loop collaboration mechanism, IvorySQL achieves full-process closure of issue response → development contribution → quality assurance → release feedback, promoting the continuous healthy evolution of the project.
-
-📢 Please read and abide by our https://github.com/IvorySQL/IvorySQL/blob/master/CODE_OF_CONDUCT_CN.md[IvorySQL Community Code of Conduct].
-
 == Roles and Responsibilities
 
 Before contributing, please confirm your current participation role to more efficiently understand the contribution methods suitable for you:
