@@ -40,7 +40,7 @@ IvorySQL由一个核心开发团队维护，该团队拥有对GitHub上的IvoryS
 * 发现 Bug、性能缺陷或文档不准确？
 * 有新的功能建议或使用体验改进？
 
-如果您准备向社区上报 Bug 或者提交需求，请在 IvorySQL 社区对应的仓库上提交 Issue，并参考本指南的 xref:#_提_issue[提交 Issue] 章节。
+如果您准备向社区上报 Bug 或者提交需求，请在 IvorySQL 社区对应的仓库上提交 Issue，并参考本指南的"提交 Issue"章节。
 
 ==== 参与社区讨论
 
@@ -109,8 +109,8 @@ IvorySQL 源码托管在 GitHub：<https://github.com/IvorySQL>。
 
 在提交代码或文档贡献之前，为了确保代码合法合规，个人或企业贡献者需要签署贡献者许可协议（CLA）。签署 CLA 是 IvorySQL 社区接受贡献的必要条件，以确保您的贡献被合法分发。请根据下列链接下载 CLA 进行签署并将签署后的 CLA 发送至 cla@ivorysql.org。
 
-* https://www.ivorysql.org/zh-CN/assets/files/individual_cla-a81f001209eb5ce0f8ea7c3be4cc69b5.pdf[个人贡献者]
-* https://www.ivorysql.org/zh-CN/assets/files/corporate_cla-76e89b6f17b0bc102cbc1105d438a917.pdf[企业贡献者]
+* https://www.ivorysql.org/zh-cn/assets/files/individual_cla-7703700da5e1ca8f26cb8a68f610d4f2.pdf[个人贡献者]
+* https://www.ivorysql.org/zh-cn/assets/files/corporate_cla-88aa01a7e770ecf89dc401f925c3438e.pdf[企业贡献者]
 
 未签署 CLA 的 Pull Request 将无法进入评审阶段。
 
@@ -157,13 +157,14 @@ IvorySQL社区提供的是中英文文档。英文文档保存在...文档存储
 
 IvorySQL 作为一款基于 PostgreSQL 研发的 Oracle 兼容数据库，天然继承了 PostgreSQL 丰富的扩展生态。为了让更多的 PostgreSQL 生态组件能够在 IvorySQL 上稳定运行，IvorySQL 社区欢迎外部贡献者参与生态组件的适配工作。
 
-适配工作主要包括：了解目标组件的特点、原理和使用方式，测试其在 IvorySQL 的 PG 模式和 Oracle 兼容模式下能否正常使用；最后基于上述调研与测试结果，编写一篇生态组件适配文档。详细步骤请参考 xref:#_生态组件适配_2[生态组件适配] 章节。
+适配工作主要包括：了解目标组件的特点、原理和使用方式，测试其在 IvorySQL 的 PG 模式和 Oracle 兼容模式下能否正常使用；最后基于上述调研与测试结果，编写一篇生态组件适配文档。详细步骤请参考"生态组件适配"章节。
 
 ==== 测试IvorySQL和报告问题
 
-GitHub:  https://github.com/IvorySQL/IvorySQL 
+GitHub
 
-​码云：https://gitee.com/IvorySQL/
+AtomGit：https://atomgit.com/IvorySQL/IvorySQL
+​码云
 
 
 ==== 参与IvorySQL网站建设
@@ -177,7 +178,7 @@ IvorySQL官网下载：https://github.com/IvorySQL/Ivory-www
 
 ==== 贡献文章
 
-您可以在IvorySQL-WWW代码仓库自己提交至blog贡献，也可以联系我们IvorySQL小助理发送至邮箱ivorysql@highgo.com 。
+您可以在IvorySQL-WWW代码仓库自己提交至blog贡献，也可以联系我们IvorySQL小助理发送至邮箱 mailto:ivorysql@highgo.com[ivorysql@highgo.com] 。
 
 === 如何做出贡献
 
@@ -911,7 +912,7 @@ image::17.png[]
 
 1、下载 https://markdown.com.cn/tools.html#%E7%BC%96%E8%BE%91%E5%99%A8[Markdown]或者 https://typoraio.cn/[Typora]文档编辑器。
 
-​	2、先下载博客源码到本地，检查源仓库(https://github.com/IvorySQL/Ivory-www)是否有更新，		  如果有更新请先更新并同步到自己的仓库。请参阅以下步骤，更新至最新版本：
+​	2、先下载博客源码到本地，检查源仓库 https://github.com/IvorySQL/Ivory-www 是否有更新，如果有更新请先更新并同步到自己的仓库。请参阅以下步骤，更新至最新版本：
 
 ``` bash
 # 拉取网站源码
@@ -920,7 +921,7 @@ git clone https://github.com/IvorySQL/Ivory-www.git
 git pull
 ```
 
-​	3、熟悉样式风格 (<<#_规范说明_2>>)
+​	3、熟悉样式风格（规范说明）
 
 === 贡献地方
 
@@ -942,7 +943,7 @@ git clone https://github.com/IvorySQL/Ivory-www.git
 git checkout -b <branch-name>
 ```
 
-​	（3）在博客目录中创建自己文章的目录，目录名字规则参照 (<<#_规范说明_2>>)。
+​	（3）在博客目录中创建自己文章的目录，目录名字规则参照规范说明。
 
 ```bash
 # 生成英文博客目录及文件
@@ -1093,7 +1094,7 @@ image::13.png[]
 
 如果您不满足于简单的在网页端进行提交或者仅修改网页内容，又或者您想要修改网页ui，本小节内容将会帮助到您。
 
-在阅读本小节内容之前，您需要确认您的Github个人仓库是否已经 `fork` 了网页模板文件仓库和静态网页文件仓库，如果没有请参考<<#_如何贡献>>。
+在阅读本小节内容之前，您需要确认您的Github个人仓库是否已经 `fork` 了网页模板文件仓库和静态网页文件仓库，如果没有请参考"如何贡献"章节。
 
 === 部署网页
 
@@ -1141,7 +1142,7 @@ IvorySQL 作为一款基于 PostgreSQL 研发的 Oracle 兼容数据库，天然
 
 ===== 签署 CLA
 
-在提交文档贡献之前，请确保您已签署贡献者许可协议（CLA）。详情请参阅本指南的 xref:#_签署_cla[签署 CLA] 章节。
+在提交文档贡献之前，请确保您已签署贡献者许可协议（CLA）。详情请参阅本指南的"签署 CLA"章节。
 
 ==== 第二步：环境准备
 
