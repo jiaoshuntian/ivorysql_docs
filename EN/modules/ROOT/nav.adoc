@@ -80,9 +80,8 @@
 * Data Migration
 ** xref:master/migration_guide.adoc[Migration]
 * IvorySQL Developers
+** xref:master/contribution/contribution_guide.adoc[Contribution Guide]
 ** xref:master/developer_guide.adoc[Developer]
-** xref:master/contribution/community_contribution_guide.adoc[Community contribution]
-** xref:master/contribution/ecosystem_contribution_guide.adoc[Ecosystem Contribution Guide]
 * IvorySQL Architecture Design
 ** Query Processing
 *** xref:master/architecture/dual_parser.adoc[Dual Parser]
