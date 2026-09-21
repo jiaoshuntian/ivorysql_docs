@@ -32,6 +32,7 @@
 ** xref:master/oracle_compatibility/compat_stragg.adoc[23、STRAGG function]
 ** xref:master/oracle_compatibility/compat_alter_index_unusable_en.adoc[24、Alter Index Unusable]
 ** xref:master/oracle_compatibility/compat_dbtimezone_en.adoc[24、dbtimezone]
+** xref:master/oracle_compatibility/nanvl.adoc[25、NANVL function]
 * Containerization and Cloud Service
 ** Containerization
 *** xref:master/containerization/k8s_deployment.adoc[K8S deployment]
@@ -119,6 +120,7 @@
 *** xref:master/oracle_builtin_functions/stragg.adoc[stragg]
 *** xref:master/oracle_builtin_functions/dbtimezone_impl_en.adoc[dbtimezone]
 *** xref:master/oracle_builtin_functions/vsize_en.adoc[vsize]
+*** xref:master/oracle_builtin_functions/nanvl.adoc[nanvl]
 ** xref:master/gb18030.adoc[GB18030 Character Set]
 * Reference
 ** xref:master/tools_reference.adoc[Tool Reference]
