@@ -96,8 +96,3 @@ SELECT dbms_random.string('X', 12) AS code_text;
 == 与 Oracle 的差异
 
 相同种子在 IvorySQL 内可重放序列，但不保证得到与 Oracle 相同的值。IvorySQL 使用 PostgreSQL 的 `pg_prng` 生成器，且 `VALUE` 不承诺 Oracle 文档所述的 38 位小数精度。需依赖精确 Oracle 序列或精度的应用应重新验证结果。
-
-== 参考资料
-
-* https://github.com/IvorySQL/IvorySQL/pull/1778[IvorySQL DBMS_RANDOM 实现 PR]
-* https://docs.oracle.com/en/database/oracle/oracle-database/19/arpls/DBMS_RANDOM.html[Oracle DBMS_RANDOM 参考文档]

@@ -62,8 +62,3 @@ When the two `VALUE` bounds are equal, the function returns the bound without co
 == Regression coverage
 
 `sql/dbms_random.sql` covers numeric and text seeds, replayed sequences, the `RANDOM` range, `NORMAL`, `STRING` character classes and lengths, forward/reversed/equal `VALUE` bounds, large numeric bounds, `TERMINATE`, and state after `DISCARD ALL`. Seeded tests assert exact results; auto-seeded tests check only range or availability.
-
-== References
-
-* https://github.com/IvorySQL/IvorySQL/pull/1778[DBMS_RANDOM implementation PR]
-* https://docs.oracle.com/en/database/oracle/oracle-database/19/arpls/DBMS_RANDOM.html[Oracle DBMS_RANDOM reference]

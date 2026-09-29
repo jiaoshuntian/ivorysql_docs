@@ -62,8 +62,3 @@ C 模块保存静态 `pg_prng_state` 和 `state_seeded` 标志，因此随机序
 == 回归验证
 
 `sql/dbms_random.sql` 覆盖数值和字符串种子、重放序列、`RANDOM` 范围、`NORMAL`、`STRING` 字符类别及长度、`VALUE` 的正向/反向/相等边界、大数值边界、`TERMINATE` 和 `DISCARD ALL` 后的状态。种子序列的测试使用确定的结果；自动设置种子的结果只验证范围或可用性。
-
-== 参考资料
-
-* https://github.com/IvorySQL/IvorySQL/pull/1778[DBMS_RANDOM 实现 PR]
-* https://docs.oracle.com/en/database/oracle/oracle-database/19/arpls/DBMS_RANDOM.html[Oracle DBMS_RANDOM 参考文档]

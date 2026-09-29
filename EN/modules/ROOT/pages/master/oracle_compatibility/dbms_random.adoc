@@ -96,8 +96,3 @@ If `opt` is `NULL`, empty, or an unrecognized single character, the function use
 == Differences from Oracle
 
 The same seed replays a sequence within IvorySQL, but the values are not guaranteed to match Oracle's. IvorySQL uses PostgreSQL's `pg_prng` generator, and `VALUE` does not promise the 38 decimal digits described in Oracle's documentation. Applications that depend on Oracle's exact sequence or precision should verify their results again.
-
-== References
-
-* https://github.com/IvorySQL/IvorySQL/pull/1778[IvorySQL DBMS_RANDOM implementation PR]
-* https://docs.oracle.com/en/database/oracle/oracle-database/19/arpls/DBMS_RANDOM.html[Oracle DBMS_RANDOM reference]
