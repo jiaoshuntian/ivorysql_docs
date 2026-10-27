@@ -13,16 +13,20 @@ See xref:master/oracle_compatibility/compat_listagg_function.adoc[LISTAGG Aggreg
 
 === Code organization
 
+Keyword and grammar files are in `src/include/oracle_parser/` and `src/backend/oracle_parser/`, respectively. Function registration and implementation files are in `contrib/ivorysql_ora/src/builtin_functions/`.
+
+Regression files are under `src/oracle_test/regress/`: test SQL and expected output are in the `sql/` and `expected/` subdirectories, and the schedule is at the directory root. The table lists filenames only.
+
 [cols="3,4",options="header"]
 |===
 |File |Responsibility
-|`src/include/oracle_parser/ora_kwlist.h` |Registers `LISTAGG` as an Oracle parser keyword
-|`src/backend/oracle_parser/ora_gram.y` |Parses `LISTAGG` and constructs the aggregate and outer check calls
-|`contrib/ivorysql_ora/src/builtin_functions/builtin_functions--1.0.sql` |Registers `sys.ora_listagg_check(text)`
-|`contrib/ivorysql_ora/src/builtin_functions/character_datatype_functions.c` |Implements NULL handling and aggregate result byte-length validation
-|`src/oracle_test/regress/sql/ora_listagg.sql` |Tests aggregation, delimiters, NULLs, filtering, and invalid syntax
-|`src/oracle_test/regress/expected/ora_listagg.out` |Expected query results and errors
-|`src/oracle_test/regress/parallel_schedule` |Schedules `ora_listagg` in the Oracle regression suite
+|`ora_kwlist.h` |Registers `LISTAGG` as an Oracle parser keyword
+|`ora_gram.y` |Parses `LISTAGG` and constructs the aggregate and outer check calls
+|`builtin_functions--1.0.sql` |Registers `sys.ora_listagg_check(text)`
+|`character_datatype_functions.c` |Implements NULL handling and aggregate result byte-length validation
+|`ora_listagg.sql` |Tests aggregation, delimiters, NULLs, filtering, and invalid syntax
+|`ora_listagg.out` |Expected query results and errors
+|`parallel_schedule` |Schedules `ora_listagg` in the Oracle regression suite
 |===
 
 === Syntax transformation

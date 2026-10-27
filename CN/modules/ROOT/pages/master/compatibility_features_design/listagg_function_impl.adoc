@@ -13,16 +13,20 @@
 
 === 代码组织
 
+关键字和语法文件分别位于 `src/include/oracle_parser/` 和 `src/backend/oracle_parser/`。函数注册及实现文件位于 `contrib/ivorysql_ora/src/builtin_functions/`。
+
+回归文件位于 `src/oracle_test/regress/`：测试 SQL 和期望结果分别在 `sql/`、`expected/` 子目录，调度文件在该目录根部。下表只列文件名。
+
 [cols="3,4",options="header"]
 |===
 |文件 |职责
-|`src/include/oracle_parser/ora_kwlist.h` |将 `LISTAGG` 注册为 Oracle 解析器关键字
-|`src/backend/oracle_parser/ora_gram.y` |解析 `LISTAGG`，生成聚合及外层校验函数调用
-|`contrib/ivorysql_ora/src/builtin_functions/builtin_functions--1.0.sql` |注册 `sys.ora_listagg_check(text)`
-|`contrib/ivorysql_ora/src/builtin_functions/character_datatype_functions.c` |实现 NULL 处理及聚合结果字节长度检查
-|`src/oracle_test/regress/sql/ora_listagg.sql` |聚合、分隔符、NULL、过滤和异常语法的测试
-|`src/oracle_test/regress/expected/ora_listagg.out` |对应查询结果及错误信息
-|`src/oracle_test/regress/parallel_schedule` |将 `ora_listagg` 加入 Oracle 回归调度
+|`ora_kwlist.h` |将 `LISTAGG` 注册为 Oracle 解析器关键字
+|`ora_gram.y` |解析 `LISTAGG`，生成聚合及外层校验函数调用
+|`builtin_functions--1.0.sql` |注册 `sys.ora_listagg_check(text)`
+|`character_datatype_functions.c` |实现 NULL 处理及聚合结果字节长度检查
+|`ora_listagg.sql` |聚合、分隔符、NULL、过滤和异常语法的测试
+|`ora_listagg.out` |对应查询结果及错误信息
+|`parallel_schedule` |将 `ora_listagg` 加入 Oracle 回归调度
 |===
 
 === 语法转换
